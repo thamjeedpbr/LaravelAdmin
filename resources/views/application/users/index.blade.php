@@ -1,0 +1,208 @@
+@extends('layouts.master')
+@section('title')
+    @lang('app.users')
+@endsection
+@section('content')
+    @component('components.breadcrumb')
+        @slot('li_1')
+            @lang('app.app')
+        @endslot
+        @slot('title')
+            @lang('app.users')
+        @endslot
+    @endcomponent
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header align-items-center d-flex">
+                    <h4 class="card-title mb-0 flex-grow-1">@lang('app.users')</h4>
+                    <div class="flex-shrink-0">
+                        <a href="{{route('users.create')}}">
+                        <button type="button" class="btn btn-primary rounded-pill">
+                            <i class="las la-plus"></i>@lang('common.add')</button></a>
+                    </div>
+                </div><!-- end card header -->
+                <div class="card-body">
+                    <div id="customerList">
+                        <div class="table-responsive">
+                            <table class="table align-middle table-nowrap" id="data-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="display: none;"></th>
+                                        <th scope="col" style="width: 20px;">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="checkAll"
+                                                    value="option">
+                                            </div>
+                                        </th>
+                                        <th class="sort" style="width: 50px;">#SL</th>
+                                        <th class="sort" data-sort="name">Name</th>
+                                        <th class="sort" data-sort="email">Email</th>
+                                        <th class="sort" data-sort="mobile">Mobile</th>
+                                        <th class="sort" data-sort="no_of_client">Clients</th>
+                                        <th class="sort" data-sort="valid_till">Valid Till</th>
+                                        <th class="sort" data-sort="email">Enable</th>
+                                        <th class="sort" data-sort="action" style="width: 50px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="form-check-all">
+                                </tbody>
+                            </table>
+                            <div class="noresult" style="display: none">
+                                <div class="text-center">
+                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                        colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
+                                    </lord-icon>
+                                    <h5 class="mt-2">Sorry! No Result Found</h5>
+                                    <p class="text-muted mb-0">We've searched more than 150+ Orders We did not find any
+                                        orders for you search.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- end card -->
+            </div>
+            <!-- end col -->
+        </div>
+    </div>
+@endsection
+@section('script')
+    <script>
+        $(document).ready(function() {
+            var table = $('#data-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: '{{ route('get-users') }}',
+                columns: [{
+                        data: 'id',
+                        name: 'id',
+                        visible: false,
+                    },
+                    {
+                        data: 'check_box',
+                        name: 'check_box'
+                    },
+                    {
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'email',
+                        name: 'email'
+                    },
+                    {
+                        data: 'phone',
+                        name: 'phone'
+                    },
+                    {
+                        data: 'no_of_client',
+                        name: 'no_of_client'
+                    },
+                    {
+                        data: 'valid_till',
+                        name: 'valid_till'
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action'
+                    },
+                ]
+            });
+
+            $("#form").submit(function(e) {
+                e.preventDefault();
+                var data = new FormData(this);
+                ajaxRequest('post', '{{ route('users.store') }}', data ,$(this));
+            });
+
+            $('#data-table tbody').on('click', 'td .enableBtn', function() {
+                var checked = $(this).prop("checked");
+                var row = $(this).closest('tr').index();
+                var data = table.row(row).data();
+                // Send AJAX request
+                $.ajax({
+                    url: '{{ route('users.change-status') }}',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                            'content') // Include CSRF token in headers
+                    },
+                    data: {
+                        checked: checked,
+                        id: data.id
+                    },
+                    success: function(response) {
+                        if(response.code == 200){
+                            Swal.fire({
+                                position: "top-end",
+                                icon: "success",
+                                title: "Status Updated",
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                        }else{
+                            Swal.fire({
+                                position: "top-end",
+                                icon: "error",
+                                title: "Some thing Wentwrong",
+                                showConfirmButton: false,
+                                timer: 1500
+                            });  
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                            Swal.fire({
+                                position: "top-end",
+                                icon: "error",
+                                title: "Some thing Wentwrong",
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                    }
+
+                });
+            });
+
+            $('#data-table tbody').on('click', 'td .editBtn', function() {
+                var row = $(this).closest('tr').index();
+                var data = table.row(row).data();
+                $('#name').val(data.display_name);
+                $('#id').val(data.id);
+                $('#name').focus();
+            });
+
+            $('#data-table tbody').on('click', 'td .removeBtn', function() {
+                var row = $(this).closest('tr').index();
+                var data = table.row(row).data();
+                var id = data.id;
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'No, cancel!',
+                    confirmButtonClass: 'btn btn-primary w-xs me-2 mt-2',
+                    cancelButtonClass: 'btn btn-danger w-xs mt-2',
+                    buttonsStyling: false,
+                    showCloseButton: true
+                }).then(function(result) {
+                    if (result.value) {
+                        ajaxRequest('delete', '{{ route('users.destroy', '') }}/' + id + '');
+                    }
+                });
+            });
+        });
+    </script>
+@endsection

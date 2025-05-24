@@ -1,0 +1,15 @@
+.card-header {
+    background-color: #0ec06a !important; /* WhatsApp green */
+}
+
+.card-title {
+    color: #ffffff !important; /* White text */
+}
+
+#page-topbar {
+    background-color: #0ec06a !important; /* WhatsApp dark green */
+}
+
+.btn-topbar {
+    color: #ffffff !important; /* White text for topbar buttons */
+}
