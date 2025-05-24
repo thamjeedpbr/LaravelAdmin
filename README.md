@@ -1,0 +1,2 @@
+# LaravelAdmin
+dummy admin pannel
